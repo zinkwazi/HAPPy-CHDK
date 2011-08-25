@@ -7,16 +7,16 @@ every x seconds and will record the temperature of the lens, CCD and battery
 to a log file.
 The script can be run in Endless mode until the battery or storage space runs out.
 
-Authors: Fraser McCrossan and Greg Lawler
+By Greg Lawler based on a script by Fraser McCrossan
 
-HAPPy project - High Altitude Photo Project - http://heffrey.com.
+HAPPy project - High Altitude Photo Project - http://happycapsule.com.
 A high altitude balloon project which aims to photograph the earth from near space.
 
 Features:
  - HAPPy logging - write temperature (C), battery voltage (mV) and timestamp data to log file.
  - Log files located in CHDK/LOGS/
  - Endless mode - will keep taking photos until battery dies or card is full.
- - Turn off the display a given number of frames after starting to conserve battery.
+ - Turn off the display x frames after starting to conserve battery.
  - Auto focus and expose for each photo.
 
 --]]
@@ -42,10 +42,10 @@ Features:
 -- convert parameters into readable variable names
 secs_frame, hours, minutes, endless, focus_at_start, display_off_frame = s, h, m, (e > 0), (f > 0), d
 
+-- propcase included with full CHDK download.
 props = require "propcase"
 
--- derive actual running parameters from the more human-friendly input
--- parameters
+-- derive actual running parameters from the more human-friendly input parameters
 function calculate_parameters (seconds_per_frame, hours, minutes, start_ticks)
    local ticks_per_frame = 1000 * secs_frame -- ticks per frame
    local total_frames = (hours * 3600 + minutes * 60) / secs_frame -- total frames
@@ -104,7 +104,7 @@ function print_status (frame, total_frames, ticks_per_frame, end_ticks, endless)
 end
 
 function ticks_to_hms (ticks)
-   local secs = (ticks + 500) / 1000 -- round to nearest seconds
+   local secs = (ticks + 500) / 1000 -- round to nearest second
    local s = secs % 60
    secs = secs / 60
    local m = secs % 60
