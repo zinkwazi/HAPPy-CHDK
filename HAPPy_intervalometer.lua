@@ -1,6 +1,8 @@
 --[[
-HAPPy Intervalometer script for CHDK written in the Lua programming language.
-Version 0.1 Feb 12, 2011
+HAPPy Intervalometer and data logging script for CHDK written in the Lua programming language.
+by Greg Lawler
+Version 0.1 February 12, 2011
+Version 0.3 October 12, 2014
 
 This script will configure your Canon camera to auto-focus, take a photo
 every x seconds and will record the temperature of the lens, CCD and battery 
@@ -24,7 +26,7 @@ Features:
 --[[
 @title HAPPy Intervalometer
 @param s Interval seconds 
-@default s 30
+@default s 40
 @param h Sequence hours
 @default h 0
 @param m Sequence minutes
