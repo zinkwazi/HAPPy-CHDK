@@ -1,15 +1,17 @@
 --[[
-HAPPy Intervalometer and data logging script for CHDK written in the Lua programming language.
-by Greg Lawler
-Version 0.1 February 12, 2011
-Version 0.3 October 12, 2014
+HAPPy Intervalometer and logging script by Greg Lawler
+
+CHDK High altitude balloon intervalometer and logging script.
+HAPPy (High Altitude Photo Project, Yay!) is the name we gave to our first balloon launch.
+This script was written specifically for taking photos from a balloon payload using a Canon
+point and shoot camera running CHDK. By far the easiest way to get started with CHDK is
+to use the STICK tool from http://www.zenoshrdlu.com/stick/stick.html
+Intervalometer functions based on a script by Fraser McCrossan
 
 This script will configure your Canon camera to auto-focus, take a photo
-every x seconds and will record the temperature of the lens, CCD and battery 
-to a log file.
-The script can be run in Endless mode until the battery or storage space runs out.
-
-By Greg Lawler based on a script by Fraser McCrossan
+every x seconds and will record the time, temperature of the lens, CCD and battery 
+to a CSV log file.
+The script can be run in Endless mode until the battery life or storage space runs out.
 
 HAPPy project - High Altitude Photo Project - http://happycapsule.com.
 A high altitude balloon project which aims to photograph the earth from near space.
@@ -18,15 +20,19 @@ Features:
  - HAPPy logging - write temperature (C), battery voltage (mV) and timestamp data to log file.
  - Log files located in CHDK/LOGS/
  - Endless mode - will keep taking photos until battery dies or card is full.
- - Turn off the display x frames after starting to conserve battery.
+ - Turns off the display to extend battery life.
  - Auto focus and expose for each photo.
+
+See the README file for instructions and GPL license info.
+
 
 --]]
 
 --[[
+-- Options that can be changed in camera when the script starts.
 @title HAPPy Intervalometer
 @param s Interval seconds 
-@default s 40
+@default s 20
 @param h Sequence hours
 @default h 0
 @param m Sequence minutes
@@ -36,15 +42,16 @@ Features:
 @param f Focus: 0=Every 1=Start
 @default f 0
 @param d Display off frame 0=Never
-@default d 5
+@default d 3
 @param l Enable HAPPy log 1=Yes
 @default l 1
 --]]
 
+
 -- convert parameters into readable variable names
 secs_frame, hours, minutes, endless, focus_at_start, display_off_frame = s, h, m, (e > 0), (f > 0), d
 
--- propcase included with full CHDK download.
+-- propcase to convert words to proper case.
 props = require "propcase"
 
 -- derive actual running parameters from the more human-friendly input parameters
@@ -81,24 +88,19 @@ function HAPPy_time()
    MMYYYY = yy .. "-" .. dd .. "-" .. mm
 end
 
-function HAPPy_log( i )
-  HAPPy_time()
-  print_screen( i )
-  print( "Picture: "..i )
-  print( "Date:",MMYYYY )
-  print( "Time:",hhmmss )
-  print( "Battery Voltage: ",get_vbatt())
-  print( "Lens Temperature:",get_temperature(0))
-  print( "CCD Temperature:",get_temperature(1))
-  print( "Battery Temperature:",get_temperature(2))
-end
+--  CSV header columns
+--  Photo Number,Date,Time,Battery Voltage,Lens Temp,CCD Temp,Battery Temp,Elapsed Time
 
 function print_status (frame, total_frames, ticks_per_frame, end_ticks, endless)
-   local free = get_jpg_count()
-   HAPPy_log( frame )
+  local free = get_jpg_count()
+  HAPPy_time()
+  print_screen( frame )
+  output_line1 = frame .. "," .. MMYYYY .. "," .. hhmmss .. "," .. get_vbatt() .. "," .. get_temperature(0) .. "," .. get_temperature(1) .. "," .. get_temperature(2)
    if endless then
       local h, m, s = ticks_to_hms(frame * ticks_per_frame)
-      print("Elapsed time: " .. h .. "h " .. m .. "m " .. s .. "s")
+      elapsed_time = h .. ":" .. m .. ":" .. s
+      csv_out = output_line1 .. "," .. elapsed_time
+      print( csv_out )
    else
       local h, m, s = ticks_to_hms(end_ticks - get_tick_count())
       print(frame .. "/" .. total_frames .. ", " .. h .. "h" .. m .. "m" .. s .. "s/" .. free .. " left")
@@ -187,10 +189,11 @@ ticks_per_frame, total_frames, end_ticks = calculate_parameters(secs_frame, hour
 
 frame = 1
 original_display_mode = get_prop(props.DISPLAY_MODE)
-target_display_mode = 2 -- off
 
 print "Press SET to exit"
-
+-- set_backlight(0) 
+-- target_display_mode = 2 -- off
+set_lcd_display(0)
 while endless or frame <= total_frames do
    print_status(frame, total_frames, ticks_per_frame, end_ticks, endless)
    if display_off_frame > 0 and frame >= display_off_frame then
